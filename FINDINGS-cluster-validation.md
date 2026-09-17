@@ -132,13 +132,35 @@ leading-shock speed is steady, not still climbing:
 | 0.035 - 0.040 | 1736.5 | 71.8 % |
 | 0.040 - 0.043 | 1690.0 | 69.9 % |
 
-It oscillates around roughly 1750 m/s with no trend over 32 mm of travel, so
-this is the wave's settled behaviour in this case and not a starting transient.
+**Corrected once the run went further: the wave is DECAYING, not steady.** The
+reading above was taken at 43 mm and looked flat. Run on to 59 mm, the last
+three windows fall monotonically:
+
+| window (m) | speed (m/s) | of D_CJ |
+|---|---|---|
+| 0.012 - 0.020 | 1734.9 | 71.7 % |
+| 0.020 - 0.028 | 1822.6 | 75.3 % |
+| 0.028 - 0.036 | 1723.8 | 71.3 % |
+| 0.036 - 0.044 | 1707.4 | 70.6 % |
+| 0.044 - 0.052 | 1618.7 | 66.9 % |
+| 0.052 - 0.059 | 1552.9 | 64.2 % |
+
+That is a different object from a marginal-but-sustained detonation. A wave
+that is still slowing after 47 mm of travel is a driver-initiated shock-flame
+complex on its way out, not a self-sustaining front, and reporting it as
+"settled at 72 %" was wrong. The error was mine and it was the ordinary one:
+a trend read off too short a record.
 
 **This is an observation about the tutorial, not a verdict on the solver, and
 it should not be read as one.** At least three explanations fit and this run
 does not separate them:
 
+0. **The numerics are not the cause. Ruled out, measured.** The same case with
+   vanLeer reconstruction instead of Minmod, the most diffusive common limiter
+   replaced by a less diffusive one, tracks the baseline to within 0.1 %:
+   1736.5 against 1734.9 m/s over 0.012-0.020 m, and 1858.9 against 1822.6 over
+   0.020-0.028 m. Numerical dissipation was the hypothesis this port was most
+   attractive for testing, and it produced a null result.
 1. ~~**The case may be underresolved.**~~ **Ruled out, measured.** The
    induction length at this mixture's von Neumann state, from a constant-volume
    Cantera reactor on the case's own mechanism, is 125 um by the 400 K-rise
@@ -150,10 +172,10 @@ does not separate them:
 2. **The tutorial may be deliberately underdriven**, in which case 72 % is
    the intended answer and only the absence of a stated expectation makes it
    look like a finding.
-3. **The mixture may be genuinely marginal.** Ammonia is hard to detonate and
-   low-velocity and galloping modes are real. The +/- 5 % oscillation about
-   1750 m/s over 32 mm is consistent with an unstable front, though this run
-   does not establish that.
+3. ~~**The mixture may be genuinely marginal**, with a low-velocity mode.~~
+   **Weakened by the decay.** A low-velocity mode is a mode: it sustains. This
+   one is still losing speed at 59 mm. Ammonia being hard to detonate remains
+   the likely reason it decays, but the wave is not sitting in a mode.
 4. **Something in the port or the solver.** Still last, but with the cheapest
    explanation now eliminated rather than assumed.
 
