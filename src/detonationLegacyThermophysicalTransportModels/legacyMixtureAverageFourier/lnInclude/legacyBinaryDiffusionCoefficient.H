@@ -1,0 +1,1 @@
+../legacyBinaryDiffusionCoefficient.H

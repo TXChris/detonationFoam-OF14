@@ -1,0 +1,1 @@
+../legacyMixtureAverageFourier.H

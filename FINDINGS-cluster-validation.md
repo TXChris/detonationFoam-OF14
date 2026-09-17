@@ -104,6 +104,50 @@ Worth a warning line in the readme, since `set -euo pipefail` is the normal
 way to write a batch script and the failure happens before anything of the
 solver runs.
 
+## Measured so far: the wave runs at about 72 % of CJ
+
+Interim, from the run still in progress at 0.043 m of the 0.1 m domain. The
+leading-shock speed is steady, not still climbing:
+
+| window (m) | speed (m/s) | of D_CJ = 2419.2 |
+|---|---|---|
+| 0.011 - 0.015 | 1836.6 | 75.9 % |
+| 0.015 - 0.020 | 1693.2 | 70.0 % |
+| 0.020 - 0.025 | 1849.3 | 76.4 % |
+| 0.025 - 0.030 | 1758.1 | 72.7 % |
+| 0.030 - 0.035 | 1716.3 | 70.9 % |
+| 0.035 - 0.040 | 1736.5 | 71.8 % |
+| 0.040 - 0.043 | 1690.0 | 69.9 % |
+
+It oscillates around roughly 1750 m/s with no trend over 32 mm of travel, so
+this is the wave's settled behaviour in this case and not a starting transient.
+
+**This is an observation about the tutorial, not a verdict on the solver, and
+it should not be read as one.** At least three explanations fit and this run
+does not separate them:
+
+1. **The case may be underresolved.** The mesh is 5 um uniform. Ammonia
+   chemistry has a long induction length, and a detonation on a mesh too coarse
+   to resolve its own induction zone propagates slow. That is the most likely
+   explanation and it is the one to test first, by computing the induction
+   length at this mixture's von Neumann state and counting cells across it.
+2. **The tutorial may be deliberately underdriven**, in which case 72 % is
+   the intended answer and only the absence of a stated expectation makes it
+   look like a finding.
+3. **Something in the port or the solver.** Last on the list, not first,
+   because the two cheaper explanations have not been ruled out.
+
+What can be said without ambiguity is narrower and still worth saying: the
+tutorial ships no expected wave speed, so none of the three can be told apart
+by a user who runs it, and a run that is behaving exactly as designed is
+indistinguishable from one that is not.
+
+Peak pressure and temperature over the whole domain at 18.5 us are 10.02 bar
+and 4522 K, against a predicted von Neumann state of 21.15 bar and 1924 K and
+a CJ state of 11.66 bar and 3410 K. Those are domain maxima and include the
+5000 K driver region, so they do NOT characterise the front and no conclusion
+is drawn from them here. Front-resolved profiles are the next measurement.
+
 ## What is still running
 
 The full `1D_NH3_O2_cracking_0.3_detonation_OF14` case, 20000 cells over
