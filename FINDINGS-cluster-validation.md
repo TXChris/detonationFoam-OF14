@@ -83,9 +83,22 @@ wave speed should approach:
 Computed from **this case's own** `constant/foam/thermo.foam`, by an
 independent equilibrium solver (Gibbs minimisation with element constraints,
 CJ taken as the minimum wave speed on the equilibrium Hugoniot and checked
-against the sonic condition). That solver is gated against Cantera at 0.02 %
-on D_CJ, T_vN and p_vN for H2/air, so the number above is a cross-tool result
-rather than one code's opinion.
+against the sonic condition).
+
+**And reproduced by Cantera 3.2.0 on the same mechanism**, converted from the
+case's OpenFOAM dictionaries without retyping a number, so the reference is
+not one code's opinion:
+
+| quantity | independent solver | Cantera 3.2.0 | difference |
+|---|---|---|---|
+| D_CJ (m/s) | 2419.2 | 2418.6 | 0.025 % |
+| T_CJ (K) | 3410.2 | 3408.2 | 0.06 % |
+| p_CJ (bar) | 11.66 | 11.65 | 0.1 % |
+| T_vN (K) | 1924.1 | 1923.6 | 0.03 % |
+| p_vN (bar) | 21.15 | 21.13 | 0.1 % |
+
+Two tools, two completely different implementations, agreeing to better than
+a tenth of a percent. Whatever else is uncertain here, the reference is not.
 
 A tutorial that prints its own leading shock position every write, as this one
 does, is one line of post-processing away from reporting a measured wave speed
@@ -126,16 +139,23 @@ this is the wave's settled behaviour in this case and not a starting transient.
 it should not be read as one.** At least three explanations fit and this run
 does not separate them:
 
-1. **The case may be underresolved.** The mesh is 5 um uniform. Ammonia
-   chemistry has a long induction length, and a detonation on a mesh too coarse
-   to resolve its own induction zone propagates slow. That is the most likely
-   explanation and it is the one to test first, by computing the induction
-   length at this mixture's von Neumann state and counting cells across it.
+1. ~~**The case may be underresolved.**~~ **Ruled out, measured.** The
+   induction length at this mixture's von Neumann state, from a constant-volume
+   Cantera reactor on the case's own mechanism, is 125 um by the 400 K-rise
+   definition and 170 um by steepest dT/dt. At the case's 5 um mesh that is
+   **25 to 34 cells across the induction zone**, comfortably above the 10 to 20
+   usually asked for. The mesh is not the problem, and if the wave really is
+   running slow its shock is weaker, its post-shock temperature lower and its
+   induction zone longer still, so it would be better resolved, not worse.
 2. **The tutorial may be deliberately underdriven**, in which case 72 % is
    the intended answer and only the absence of a stated expectation makes it
    look like a finding.
-3. **Something in the port or the solver.** Last on the list, not first,
-   because the two cheaper explanations have not been ruled out.
+3. **The mixture may be genuinely marginal.** Ammonia is hard to detonate and
+   low-velocity and galloping modes are real. The +/- 5 % oscillation about
+   1750 m/s over 32 mm is consistent with an unstable front, though this run
+   does not establish that.
+4. **Something in the port or the solver.** Still last, but with the cheapest
+   explanation now eliminated rather than assumed.
 
 What can be said without ambiguity is narrower and still worth saying: the
 tutorial ships no expected wave speed, so none of the three can be told apart
