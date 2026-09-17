@@ -155,12 +155,15 @@ a trend read off too short a record.
 it should not be read as one.** At least three explanations fit and this run
 does not separate them:
 
-0. **The numerics are not the cause. Ruled out, measured.** The same case with
-   vanLeer reconstruction instead of Minmod, the most diffusive common limiter
-   replaced by a less diffusive one, tracks the baseline to within 0.1 %:
-   1736.5 against 1734.9 m/s over 0.012-0.020 m, and 1858.9 against 1822.6 over
-   0.020-0.028 m. Numerical dissipation was the hypothesis this port was most
-   attractive for testing, and it produced a null result.
+0. ~~**The numerics are not the cause. Ruled out, measured.**~~ **WRONG, and
+   corrected below: the numerics ARE the cause.** The claim was that the same
+   case with vanLeer reconstruction instead of Minmod tracks the baseline to
+   within 0.1 %, and over the stretch it was measured on that is true:
+   1736.5 against 1734.9 m/s over 0.012-0.020 m, and 1858.9 against 1822.6
+   over 0.020-0.028 m. But the vanLeer run was still going. It parts from the
+   baseline at 30 mm and transitions to detonation at 40 mm. The measurement
+   stopped 12 mm short of the answer. See "The limiter decides whether this
+   case detonates" at the end of this report.
 1. ~~**The case may be underresolved.**~~ **Ruled out, measured.** The
    induction length at this mixture's von Neumann state, from a constant-volume
    Cantera reactor on the case's own mechanism, is 125 um by the 400 K-rise
@@ -176,8 +179,9 @@ does not separate them:
    **Weakened by the decay.** A low-velocity mode is a mode: it sustains. This
    one is still losing speed at 59 mm. Ammonia being hard to detonate remains
    the likely reason it decays, but the wave is not sitting in a mode.
-4. **Something in the port or the solver.** Still last, but with the cheapest
-   explanation now eliminated rather than assumed.
+4. **Something in the port or the solver.** Still last, and now the live
+   question is narrower: not whether the port is wrong, but which limiter the
+   tutorial ought to ship.
 
 What can be said without ambiguity is narrower and still worth saying: the
 tutorial ships no expected wave speed, so none of the three can be told apart
@@ -190,7 +194,17 @@ a CJ state of 11.66 bar and 3410 K. Those are domain maxima and include the
 5000 K driver region, so they do NOT characterise the front and no conclusion
 is drawn from them here. Front-resolved profiles are the next measurement.
 
-## The result that matters: a second, unrelated solver agrees
+## A second, unrelated solver agrees with the baseline
+
+*Read with the section after it. The comparison stands as measured, but the
+conclusion drawn from it does not. Both of these runs carry heavy dissipation
+where the shock lives: the baseline reconstructs rho, U and T with Minmod, the
+most diffusive common MUSCL limiter, and the stock solver's momentum
+convection is `Gauss upwind`, first order (its species, kinetic energy and
+pressure flux are `Gauss vanLeer`). Two schemes that are both dissipative on
+the momentum equation agreeing that the wave decays is weaker evidence than it
+looked, and the section after this one shows what happens when that
+dissipation is reduced.*
 
 The same case, same mesh, same initial fields, same 33-species mechanism and
 the same thermo, run under OpenFOAM 14's own stock `multicomponentFluid`
@@ -229,8 +243,95 @@ readme would have done it.
 
 ## What is still running
 
-The full `1D_NH3_O2_cracking_0.3_detonation_OF14` case, 20000 cells over
-0.1 m, on 20 ranks. Its own `SW_position_limit` of 0.09999 m ends it when the
-wave crosses the domain. The measurement it is being run for is the mean
-leading-shock speed once the wave is established, against the 2419.2 m/s
-above. That result will be appended here.
+Two runs of the full `1D_NH3_O2_cracking_0.3_detonation_OF14` case, 20000
+cells over 0.1 m, 20 ranks each, both with `SW_position_limit` 0.09999 m so
+they end when the wave crosses the domain.
+
+| | scheme | at | still to answer |
+|---|---|---|---|
+| job 684, n1c | vanLeer | 53.7 mm, t = 2.08e-5 s | does the overdriven wave settle at CJ |
+| job 683, n1b | stock `multicomponentFluid` | 48.3 mm, t = 2.18e-5 s | is its rise at 43 mm an oscillation or its own transition |
+
+The Minmod baseline (job 671) is not running: it was killed by a 10 h wall
+limit at 59.3 mm. It needs resubmitting with a longer limit before "Minmod
+does not detonate in this tube" can be stated rather than inferred.
+
+## The limiter decides whether this case detonates
+
+This supersedes item 0 above, which said numerical dissipation had been ruled
+out. It had not been. The vanLeer run that produced that null result was still
+going when the result was written, and it was reporting agreement from the
+only stretch where the two limiters agree.
+
+Same case, same 20000 cells over 0.1 m, same mechanism, same thermo, same
+initial fields, 20 ranks. `diff` over `system/fvSolution`,
+`system/controlDict`, `constant/solverTypeProperties` and
+`constant/chemistryProperties` is empty. Three lines of `system/fvSchemes`
+differ:
+
+```
+reconstruct(rho)    Minmod;      ->  vanLeer;
+reconstruct(U)      MinmodV;     ->  vanLeerV;
+reconstruct(T)      Minmod;      ->  vanLeer;
+```
+
+Leading-shock speed as a least-squares slope over each 2 mm window, against
+D_CJ = 2419.2 m/s:
+
+| window (m) | Minmod | vanLeer |
+|---|---|---|
+| 0.012 - 0.014 | 1835.8 (75.9 %) | 1835.1 (75.9 %) |
+| 0.016 - 0.018 | 1699.6 (70.3 %) | 1701.4 (70.3 %) |
+| 0.020 - 0.022 | 1789.1 (74.0 %) | 1887.3 (78.0 %) |
+| 0.024 - 0.026 | 1822.7 (75.3 %) | 1847.3 (76.4 %) |
+| 0.028 - 0.030 | 1726.9 (71.4 %) | 1836.8 (75.9 %) |
+| 0.032 - 0.034 | 1690.8 (69.9 %) | 1855.7 (76.7 %) |
+| 0.036 - 0.038 | 1743.9 (72.1 %) | 2091.4 (86.4 %) |
+| 0.038 - 0.040 | 1721.1 (71.1 %) | 2413.6 (99.8 %) |
+| 0.040 - 0.042 | 1691.0 (69.9 %) | **3244.6 (134.1 %)** |
+| 0.044 - 0.046 | 1655.6 (68.4 %) | 2840.7 (117.4 %) |
+| 0.048 - 0.050 | 1598.4 (66.1 %) | 2745.3 (113.5 %) |
+| 0.052 - 0.054 | 1577.0 (65.2 %) | 2637.6 (109.0 %) |
+| 0.058 - 0.060 | 1551.3 (64.1 %) | still running |
+
+Out to 20 mm the two agree to 0.1 %, and out to 28 mm to 2 %. That is the
+stretch item 0 was measured on.
+
+From 30 mm they separate. vanLeer climbs through 86 % of CJ at 37 mm and 100 %
+at 39 mm, spikes to 134 % at 41 mm, and relaxes through 117, 113 and 109 %.
+An overshoot past CJ followed by a decay toward it is the signature of
+deflagration-to-detonation transition with an overdriven phase. Minmod, in the
+same case at the same instant, is at 70 % and still falling, and reaches 64 %
+at 59 mm.
+
+**So the sub-CJ wave is a property of the limiter, not of the case.** With the
+tutorial's default the wave decays; with a less diffusive limiter of the same
+family it detonates.
+
+### What this still does not show
+
+- **vanLeer has not been shown to settle at CJ.** It is at 109 % and falling
+  with 46 mm of tube left. Overdriven relaxation is the reading, but it is not
+  a measurement until the run reaches the end of the domain.
+- **Minmod has not been shown never to detonate.** That run was killed by a
+  10 h wall limit at 59 mm, not by reaching an answer.
+- **One mesh.** dx = 5 um in all three runs, so dissipation and resolution are
+  not separated. The induction zone is resolved at 25 to 34 cells, but the
+  transition length is a different scale. The experiment that separates them
+  is Minmod on a finer mesh: if Minmod detonates at 2.5 um, the default is
+  under-resolved rather than over-dissipative. That run has not been done.
+
+### What is worth sending upstream
+
+Not "the tutorial is wrong". The sharper point, and the one a user cannot
+reach on their own:
+
+**This tutorial's outcome is scheme-dependent, and it ships no expected
+result.** A user who runs it with the defaults gets a decaying 64 % wave, a
+user who changes one line in `fvSchemes` gets a detonation, and nothing in the
+case tells either of them which was intended. One line in the readme stating
+the expected wave speed, and a note that the Minmod default is the reason it
+is what it is, would close that.
+
+Measurement, tracks and the analysis script:
+`rde_engine/benchmarks/detonationfoam-limiter/`.
