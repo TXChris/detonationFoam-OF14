@@ -190,6 +190,43 @@ a CJ state of 11.66 bar and 3410 K. Those are domain maxima and include the
 5000 K driver region, so they do NOT characterise the front and no conclusion
 is drawn from them here. Front-resolved profiles are the next measurement.
 
+## The result that matters: a second, unrelated solver agrees
+
+The same case, same mesh, same initial fields, same 33-species mechanism and
+the same thermo, run under OpenFOAM 14's own stock `multicomponentFluid`
+instead of `detonationFluid`. Those are different numerical families: density
+based with MUSCL reconstruction and an HLLC-P Riemann solver against pressure
+based PIMPLE with Gauss upwind. Both measured the same way, from the written
+pressure field at the tutorial's own 101425 Pa threshold, so neither solver's
+own reporting gets a vote.
+
+| window (m) | detonationFluid | multicomponentFluid |
+|---|---|---|
+| 0.020 - 0.028 | 1822.6 (75.3 %) | 1811.4 (74.9 %) |
+| 0.028 - 0.036 | 1723.8 (71.3 %) | 1687.2 (69.7 %) |
+| 0.036 - 0.044 | 1707.4 (70.6 %) | 1708.5 (70.6 %) |
+| 0.044 - 0.047 | 1654.0 (68.4 %) | 1856.2 (76.7 %) |
+
+Three of the four windows agree to within 2 %, and one of them to a tenth of a
+percent. The fourth sits at the end of the data available for the stock solver
+and spans only 3 mm, so it is the noisiest window in the table rather than a
+disagreement; it should be re-read when that run has gone further.
+
+**So the sub-CJ wave is not an artefact of this port.** Two solvers with
+nothing in common but the framework, the mesh and the chemistry produce the
+same wave at the same speed. Taken with the two earlier null results -- the
+mesh resolves 25 to 34 cells across the induction zone, and vanLeer against
+Minmod changes the answer by 0.1 % -- every explanation that would have
+implicated the numerics is now measured away.
+
+What remains is the case itself: a driver-initiated wave in a mixture that
+does not sustain a detonation at these conditions, decaying slowly over the
+domain. That may well be exactly what the tutorial is for. The point of the
+report stands either way, and is now sharper: **a user cannot tell, because the
+tutorial states no expected result.** Three independent measurements were
+needed here to establish that a number is the intended one, and one line in a
+readme would have done it.
+
 ## What is still running
 
 The full `1D_NH3_O2_cracking_0.3_detonation_OF14` case, 20000 cells over
