@@ -17,7 +17,7 @@ Foundation 14 on shared NFS. No GPU. Builds are done on a compute node with
 
 | Check | Result |
 |---|---|
-| `./Allwmake` against OpenFOAM Foundation 14 | built clean, GCC 15.2.0, `-march=native` |
+| `./Allwmake` against OpenFOAM Foundation 14 | built clean, GCC 15.2.0. **Not** `-march=native`, as this row first said: the flag was set in the environment and wmake does not read it (`wmake/rules/linux64Gcc/c++Opt` is `-O3` only), and the library carries no AVX instruction at all (`objdump` census, 2026-09-18). Baseline x86-64. |
 | `./AllwmakeAMR` (reusable `planarRefiner`) | built clean |
 | `tutorials/1D_NH3_O2_cracking_0.3_detonation_OF14_fast` | ran to `End`, 141 steps, stopped on its own shock-position limit |
 | `tutorials/H2_O2_laptop_autoUnref_Soret_OF14` | PASSED, including `VerifyLaptopSmoke` 14/14 |
