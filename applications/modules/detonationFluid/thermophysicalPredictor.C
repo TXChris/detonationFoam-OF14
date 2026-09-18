@@ -18,7 +18,15 @@ void Foam::solvers::detonationFluid::thermophysicalPredictor()
     );
 
     reaction_->correct();
-    Qdot_ = reaction_->Qdot();
+
+    // reaction_->correct() integrates the chemistry once per time step
+    // (laminar.C: it returns at once on later outer correctors), so RR and
+    // therefore Qdot are fixed within the step. Rebuilding the field on every
+    // outer corrector is an O(nCells x nSpecie) sum for the same numbers.
+    if (pimple.firstIter())
+    {
+        Qdot_ = reaction_->Qdot();
+    }
 
     forAll(Y_, i)
     {
@@ -103,8 +111,6 @@ void Foam::solvers::detonationFluid::thermophysicalPredictor()
     fvConstraints().constrain(e);
 
     thermo_.correct();
-    gamma_ = thermo_.gamma();
-    Rgas_ = thermo_.Cp() - thermo_.Cv();
 }
 
 // ************************************************************************* //

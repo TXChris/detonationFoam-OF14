@@ -210,32 +210,6 @@ Foam::solvers::detonationFluid::detonationFluid(fvMesh& mesh)
         dimensionedScalar("Qdot", dimEnergy/dimVolume/dimTime, 0)
     ),
 
-    gamma_
-    (
-        IOobject
-        (
-            "gama",
-            runTime.name(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        thermo_.gamma()
-    ),
-
-    Rgas_
-    (
-        IOobject
-        (
-            "R_gas",
-            runTime.name(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        thermo_.Cp() - thermo_.Cv()
-    ),
-
     momentumTransport_
     (
         compressible::momentumTransportModel::New
@@ -428,6 +402,7 @@ void Foam::solvers::detonationFluid::thermophysicalTransportCorrector()
 
 void Foam::solvers::detonationFluid::postSolve()
 {
+    magGradrho_ = mag(fvc::grad(rho_));
     updateDiagnostics();
 
     Info<< "min/max(p) = " << min(p_).value() << ", " << max(p_).value()
@@ -466,8 +441,9 @@ void Foam::solvers::detonationFluid::postSolve()
 
 void Foam::solvers::detonationFluid::updateDiagnostics()
 {
-    magGradrho_ = mag(fvc::grad(rho_));
-
+    // maxp is a running maximum sampled before and after every step; the
+    // pre-step sample matters only at the first step, where it records the
+    // initial field. Kept in both places so the written field is unchanged.
     forAll(maxp_, celli)
     {
         if (p_[celli] > maxp_[celli])
@@ -476,8 +452,11 @@ void Foam::solvers::detonationFluid::updateDiagnostics()
         }
     }
 
-    gamma_ = thermo_.gamma();
-    Rgas_ = thermo_.Cp() - thermo_.Cv();
+    // magGradrho, gamma and R_gas used to be evaluated here too, twice per
+    // step. magGradrho now updates once, in postSolve, which is where a write
+    // or a refiner reads it (rho does not change between postSolve and the
+    // next preSolve). gamma and R_gas were NO_WRITE fields nothing read:
+    // three whole-field mixture evaluations each, per call, for nothing.
 }
 
 // ************************************************************************* //

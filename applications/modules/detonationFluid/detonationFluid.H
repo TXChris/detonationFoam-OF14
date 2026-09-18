@@ -77,8 +77,6 @@ protected:
     volScalarField magGradrho_;
     volScalarField maxp_;
     volScalarField Qdot_;
-    volScalarField gamma_;
-    volScalarField Rgas_;
 
     // Native OF14 transport and reaction models
     autoPtr<compressible::momentumTransportModel> momentumTransport_;
