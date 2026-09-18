@@ -335,3 +335,26 @@ is what it is, would close that.
 
 Measurement, tracks and the analysis script:
 `rde_engine/benchmarks/detonationfoam-limiter/`.
+
+## The side patches are not irrelevant either
+
+The tutorial mesh is 20000 x 1 x 1 cells and its `bottom` and `top` patches
+are `wall`, with `zeroGradient` on every field, so each carries 20000 faces
+on a problem that has none in that direction. Two consequences, measured on
+the cluster (rde_engine `benchmarks/openfoam-hotpath`, jobs 763 and 765, six
+ranks, the production ISAT settings, 678 steps to 0.2 µs):
+
+- **Cost.** Every field evaluates 40000 boundary faces per update, and the
+  energy boundary condition builds a species mixture per face and per
+  adjacent cell each time. Declaring the two patches `empty` took the step
+  from 0.1808 to 0.0942 s: 1.92x.
+- **Answer.** The written fields are not the same: T at the front differs by
+  up to 1 % at 0.2 µs, p by 0.2 %, and the fields away from the front are
+  byte-identical. The side faces sit in the reconstruction limiter's stencil,
+  so a 1-D result depends on a patch type that should not enter it.
+
+Every wave speed in this report was measured with the `wall` sides. The same
+case with `empty` sides, Minmod, 20 ranks, is running to the end of the tube
+(job 768) and its track will be added here. Until then the tables above are
+"with the tutorial's patches", which is one more thing a readme line would
+have settled.
