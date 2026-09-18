@@ -455,8 +455,11 @@ void Foam::solvers::detonationFluid::updateDiagnostics()
     // magGradrho, gamma and R_gas used to be evaluated here too, twice per
     // step. magGradrho now updates once, in postSolve, which is where a write
     // or a refiner reads it (rho does not change between postSolve and the
-    // next preSolve). gamma and R_gas were NO_WRITE fields nothing read:
-    // three whole-field mixture evaluations each, per call, for nothing.
+    // next preSolve). gamma and R_gas were NO_WRITE fields nothing read.
+    // They were cheap: Cp() and Cv() are fields stored by thermo.correct()
+    // and gamma() is their quotient, so this is field arithmetic, not a
+    // mixture rebuild. Removed as dead code; the profile share it frees is
+    // small and is measured, not claimed.
 }
 
 // ************************************************************************* //
