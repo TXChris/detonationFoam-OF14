@@ -360,7 +360,18 @@ ranks, the production ISAT settings, 678 steps to 0.2 µs):
   that should not enter it.
 
 Every wave speed in this report was measured with the `wall` sides. The same
-case with `empty` sides, Minmod, 20 ranks, is running to the end of the tube
-(job 771) and its track will be added here. Until then the tables above are
-"with the tutorial's patches", which is one more thing a readme line would
-have settled.
+case with `empty` sides, Minmod, 20 ranks (job 771), has reached 60 mm, and
+its leading-shock speed agrees with the wall-sided baseline (job 671) to
+within 1 % in every 4 mm window from 8 to 60 mm
+(rde_engine `benchmarks/detonationfoam-limiter/tracks/minmod-empty-own.txt`):
+
+| window (m) | Minmod, wall sides | Minmod, empty sides |
+|---|---|---|
+| 0.020 - 0.024 | 1885.3 (77.9 %) | 1888.5 (78.1 %) |
+| 0.032 - 0.036 | 1741.4 (72.0 %) | 1759.5 (72.7 %) |
+| 0.044 - 0.048 | 1649.4 (68.2 %) | 1643.5 (67.9 %) |
+| 0.056 - 0.060 | 1538.9 (63.6 %) | 1546.2 (63.9 %) |
+
+So the side faces change the fields at the front and not the wave: the
+tables above stand with either patch type, and `empty`, which is the
+correct declaration for a one-cell-thick mesh, is also the cheaper one.
